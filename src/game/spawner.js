@@ -69,9 +69,12 @@ export class Director {
     return [pl.x + Math.cos(a) * r, pl.y + Math.sin(a) * r];
   }
 
+  // Every regular enemy goes through here, including boss summons and
+  // events, so this is where the hard cap lives. Returns null when full.
   spawn(id, x, y, opts = {}) {
     const def = ENEMIES[id];
     const run = this.run;
+    if (run.enemies.list.length >= run.cap + 60 && !opts.force) return null;
     const e = run.enemies.create();
     const hp = def.hp * this.hpScale() * (opts.hpMul || 1);
     e.def = def; e.id = id;
@@ -93,7 +96,8 @@ export class Director {
   spawnElite() {
     const [x, y] = this.spawnPos(10);
     const id = weighted(this.pool());
-    const e = this.spawn(id, x, y, { hpMul: 14, scale: 2, xpMul: 10, speedMul: 0.95 });
+    const e = this.spawn(id, x, y, { hpMul: 14, scale: 2, xpMul: 10, speedMul: 0.95, force: true });
+    if (!e) return null;
     e.isElite = true;
     e.kbRes *= 0.25;
     return e;
@@ -157,10 +161,24 @@ export class Director {
       for (let i = 0; i < count; i++) {
         const off = (Math.random() - 0.5) * 140, back = Math.random() * 90;
         const e = this.spawn(ev.enemy, pl.x - dx * (R + back) - dy * off, pl.y - dy * (R + back) + dx * off, { speedMul: 1.7 });
+        if (!e) break;
         e.ai = 'swarm'; e.tx = dx; e.ty = dy; e.t = 9;
       }
       run.toast('A SWARM APPROACHES');
     }
+  }
+
+  // Quietly remove the furthest ordinary enemy (used to make room).
+  recycleOne() {
+    const pl = this.run.player;
+    let far = null, fd = -1;
+    for (const e of this.run.enemies.list) {
+      if (e.isBoss || e.isElite || e.isStatic || e.dead) continue;
+      const d = (e.x - pl.x) ** 2 + (e.y - pl.y) ** 2;
+      if (d > fd) { fd = d; far = e; }
+    }
+    // Only flag it: the list is compacted at the end of the frame.
+    if (far) this.run.enemies.kill(far);
   }
 
   update(dt) {
@@ -190,6 +208,8 @@ export class Director {
     // Elites
     this.eliteT -= dt;
     if (this.eliteT <= 0) {
+      // Make room for the elite if the field is full; it matters more.
+      if (list.length >= run.cap + 60) this.recycleOne();
       this.eliteT = this.map.eliteEvery * (m > 15 ? 0.75 : 1);
       this.spawnElite();
     }

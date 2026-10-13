@@ -107,10 +107,9 @@ export class Renderer {
       const z = zones[i];
       if (!inView(z.x, z.y, z.r)) continue;
       const fade = Math.min(1, z.life * 2);
-      ctx.globalAlpha = 0.28 * fade;
-      ctx.fillStyle = z.blue ? '#4b8de0' : '#ec8a2e';
-      ctx.beginPath(); ctx.ellipse(z.x - camX, z.y - camY, z.r, z.r * 0.75, 0, 0, TAU); ctx.fill();
+      const pool = this.zoneSprite(z.r, z.blue);
       ctx.globalAlpha = fade;
+      ctx.drawImage(pool, Math.round(z.x - camX - pool.width / 2), Math.round(z.y - camY - pool.height / 2));
       const f = atlas.get(z.blue ? 'blueflame' : 'flame');
       const n = 3 + Math.floor(z.r / 10);
       for (let k = 0; k < n; k++) {
@@ -285,6 +284,23 @@ export class Renderer {
     ctx.globalAlpha = 1;
 
     this.drawHud(run, w, h, safe, input);
+  }
+
+  // Pre-rendered translucent fire pool, cached per radius (no per-frame paths).
+  zoneSprite(r, blue) {
+    const key = (blue ? 'b' : 'o') + Math.round(r);
+    let c = this.zoneCache && this.zoneCache.get(key);
+    if (c) return c;
+    if (!this.zoneCache) this.zoneCache = new Map();
+    const R = Math.round(r);
+    c = document.createElement('canvas');
+    c.width = R * 2 + 2; c.height = Math.round(R * 1.5) + 2;
+    const g = c.getContext('2d');
+    g.globalAlpha = 0.3;
+    g.fillStyle = blue ? '#4b8de0' : '#ec8a2e';
+    g.beginPath(); g.ellipse(c.width / 2, c.height / 2, R, R * 0.75, 0, 0, TAU); g.fill();
+    this.zoneCache.set(key, c);
+    return c;
   }
 
   drawPointerIfOffscreen(o, camX, camY, w, h, safe, color) {

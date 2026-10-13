@@ -27,7 +27,7 @@ export function installDevTools(game) {
     hooks.end = (s) => { stats.runs++; stats.last = s; end(s); };
     if (god) {
       const hurt = run.hurtPlayer.bind(run);
-      run.hurtPlayer = (d) => { hurt(d); if (run.player.hp < 1) run.player.hp = run.player.maxHp; };
+      run.hurtPlayer = (d) => { const pl = run.player; pl.hp = Math.max(pl.hp, d + 1); hurt(d); };
     }
     if (stress) setupStress(run);
   };

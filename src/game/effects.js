@@ -3,7 +3,7 @@
 // cost bounded no matter how chaotic the fight gets.
 
 const MAX_PARTICLES = 220;
-const MAX_NUMBERS = 48;
+const MAX_NUMBERS = 36;
 const MAX_FX = 64;
 
 export class Effects {

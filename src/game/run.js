@@ -19,7 +19,7 @@ import { weighted } from '../core/math.js';
 const TAU = Math.PI * 2;
 export const MAX_WEAPONS = 6;
 export const MAX_PASSIVES = 6;
-const MAX_GEMS = 320;
+const MAX_GEMS = 220; // extra drops merge into existing gems
 const ENV_SLOT = 7; // damage from bombs etc.
 
 export function xpForLevel(l) {
