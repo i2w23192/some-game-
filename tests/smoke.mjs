@@ -1,0 +1,20 @@
+// Loads the game in headless Chromium, reports console errors and takes screenshots.
+import { chromium } from 'playwright';
+const url = process.argv[2] || 'http://127.0.0.1:8080/';
+const out = process.argv[3] || '/tmp/shot';
+const wait = parseInt(process.argv[4] || '3000', 10);
+const browser = await chromium.launch();
+const page = await browser.newPage({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 3, hasTouch: true, isMobile: true });
+const errors = [];
+page.on('console', (m) => { if (m.type() === 'error' || m.type() === 'warning') errors.push(`[${m.type()}] ${m.text()}`); });
+page.on('pageerror', (e) => errors.push('[pageerror] ' + e.message + '\n' + e.stack));
+await page.goto(url);
+await page.waitForTimeout(wait);
+await page.screenshot({ path: out + '.png' });
+const stats = await page.evaluate(() => window.__botStats ? JSON.stringify({ ...window.__botStats, log: window.__botStats.log.slice(-15) }) : null);
+const run = await page.evaluate(() => { const r = window.__game && window.__game.run; return r ? { t: r.time.toFixed(1), lvl: r.level, kills: r.kills, enemies: r.enemies.list.length, hp: Math.round(r.player.hp), gold: Math.round(r.gold), weapons: r.weapons.map(w => w.id + ':' + w.level).join(' ') } : null; });
+const uniq = [...new Set(errors.filter((e) => !e.includes('AudioContext')))];
+console.log('errors:', uniq.length ? uniq.slice(0, 5).join('\n') + ` (${errors.length} total)` : 'none');
+console.log('run:', JSON.stringify(run));
+console.log('bot:', stats);
+await browser.close();
