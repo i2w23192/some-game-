@@ -1,0 +1,24 @@
+name: Tests
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npx playwright install --with-deps chromium
+      - name: Offline cache list is up to date
+        run: |
+          node tools/update-sw.mjs
+          git diff --exit-code sw-assets.js || (echo "Run 'node tools/update-sw.mjs' and commit sw-assets.js" && exit 1)
+      - run: npm test
