@@ -4,6 +4,7 @@
 import { CHARACTERS } from '../data/characters.js';
 import { PASSIVES } from '../data/passives.js';
 import { SHOP, RELICS } from '../data/meta.js';
+import { EMBER_BONUS } from '../meta/rebirth.js';
 
 export const BASE = {
   might: 1, cooldown: 1, area: 1, duration: 1, projSpeed: 1, amount: 0,
@@ -37,6 +38,7 @@ export function metaStats(charId, profile) {
     add(s, r.fixed);
     add(s, r.per, stars);
   }
+  if (profile.rebirth && profile.rebirth.embers) add(s, EMBER_BONUS, profile.rebirth.embers);
   return s;
 }
 

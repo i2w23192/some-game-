@@ -472,3 +472,5 @@ textarea.code, input.code {
 input.code.gift { font-size: 16px; min-height: 46px; text-transform: uppercase; }
 
 .admin-badge { display: inline-block; margin-top: 4px; padding: 1px 10px; border: 2px solid var(--red); color: var(--red); font-size: 13px; letter-spacing: 3px; }
+
+.reborn-badge { margin-top: 4px; color: #ec8a2e; font-size: 14px; text-shadow: 0 0 8px rgba(236, 138, 46, 0.5); }

@@ -25,6 +25,7 @@ export function defaultProfile() {
     bounties: [],
     leaderboard: [], // best runs, see src/meta/leaderboard.js
     daily: { last: null, streak: 0, total: 0 }, // login streak, see src/meta/daily.js
+    rebirth: { count: 0, embers: 0, base: 0 }, // prestige, see src/meta/rebirth.js
     bountySeed: 1,
     bountyRerolls: 1,
     last: { char: 'warden', map: 'gravewood', mode: 'standard', nightfall: 0 },
