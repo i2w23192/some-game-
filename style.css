@@ -449,3 +449,22 @@ textarea.code {
 .lbrow.top1 .lbrank { color: var(--gold); }
 .lbrow.top2 .lbrank { color: #d8d8e8; }
 .lbrow.top3 .lbrank { color: #e09a5a; }
+
+/* level-up card rarity */
+.card.choice { border-color: var(--rc, #3d5a7a); }
+.card.choice .rarity { font-size: 11px; font-weight: 700; letter-spacing: 1px; text-transform: uppercase; color: var(--rc); }
+.card.choice.rar-rare { background: #1a2238; }
+.card.choice.rar-epic { background: #241a38; box-shadow: 0 0 10px rgba(163, 90, 216, 0.45), 0 4px 0 #0b0710; }
+.card.choice.rar-legendary { background: #2e2414; box-shadow: 0 0 16px rgba(245, 176, 65, 0.6), 0 4px 0 #0b0710; animation: legend 1.2s ease-in-out infinite alternate; }
+@keyframes legend { from { box-shadow: 0 0 8px rgba(245, 176, 65, 0.4), 0 4px 0 #0b0710; } to { box-shadow: 0 0 20px rgba(245, 176, 65, 0.8), 0 4px 0 #0b0710; } }
+
+/* daily reward */
+.daily-strip { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.dday { position: relative; background: var(--panel2); border: 2px solid var(--line); padding: 6px 2px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 2px; }
+.dday.big { grid-column: span 2; border-color: #6b5a2a; }
+.dday.today { border-color: var(--gold); box-shadow: 0 0 10px rgba(245, 211, 81, 0.5); }
+.dday.done { opacity: 0.5; }
+.dnum { font-size: 11px; color: var(--muted); }
+.dgold { font-size: 13px; color: var(--gold); }
+.dextra { font-size: 10px; color: var(--purple); }
+.dcheck { position: absolute; top: 2px; right: 4px; color: var(--green); font-size: 14px; }

@@ -16,6 +16,8 @@ import {
   relicSlots, rewardText, buyUpgrade, refundAll, toggleEquip, ensureBounties,
   claimBounty, rerollBounty,
 } from '../meta/progression.js';
+import { CARD_RARITIES } from '../game/run.js';
+import { dailyStatus, claimDaily, DAILY_REWARDS, rewardScale } from '../meta/daily.js';
 import { leaderboardView } from '../meta/leaderboard.js';
 import { exportCode, importCode, wipeProfile, defaultProfile } from '../meta/save.js';
 
@@ -139,6 +141,9 @@ export class UI {
     const p = this.p;
     ensureBounties(p);
     const claimable = p.bounties.filter((b) => b.done).length;
+    const daily = dailyStatus(p);
+    // Greet the player with today's reward once per app launch.
+    if (daily.canClaim && !this.dailyShown) { this.dailyShown = true; this.showDaily(); return; }
     const el = h('div', { class: 'screen title' },
       h('div', { class: 'logo' },
         h('div', { class: 'logo-art' }, icon(atlas.icon('warden', 6), 'hero'), icon(atlas.icon('brazier', 5), 'flame')),
@@ -153,7 +158,8 @@ export class UI {
         h('div', { class: 'row2' },
           btn('Feats', () => this.showFeats()),
           btn(['Bounties', claimable ? h('span', { class: 'badge' }, String(claimable)) : null], () => this.showBounties())),
-        h('div', { class: 'row2' },
+        h('div', { class: 'row3' },
+          btn(['Daily', daily.canClaim ? h('span', { class: 'badge' }, '!') : null], () => this.showDaily()),
           btn('Records', () => this.showLeaderboard()),
           btn('Settings', () => this.showSettings()))),
       h('div', { class: 'foot' },
@@ -367,6 +373,46 @@ export class UI {
     this.mount('relics', el, () => this.showTitle());
   }
 
+  // ------------------------------------------------------------ daily reward
+  showDaily(claimed = null) {
+    const p = this.p;
+    const st = dailyStatus(p);
+    const scale = rewardScale(p);
+    const strip = h('div', { class: 'daily-strip' });
+    for (const r of DAILY_REWARDS) {
+      const done = st.canClaim ? r.day < st.day : r.day <= st.day;
+      const today = st.canClaim && r.day === st.day;
+      strip.appendChild(h('div', { class: 'dday' + (done ? ' done' : '') + (today ? ' today' : '') + (r.day === 7 ? ' big' : '') },
+        h('div', { class: 'dnum' }, 'Day ' + r.day),
+        icon(atlas.icon(r.relicLuck ? (r.day === 7 ? 'bosschest' : 'chest') : 'coinbag', 3), 'ico'),
+        h('div', { class: 'dgold' }, formatNum(Math.round(r.gold * scale))),
+        r.relicLuck ? h('div', { class: 'dextra' }, r.day === 7 ? '+ great relic' : '+ relic') : null,
+        done ? h('div', { class: 'dcheck' }, '✓') : null));
+    }
+    const result = claimed ? h('div', { class: 'list' },
+      h('div', { class: 'card reward-card goldr' }, icon(atlas.icon('coinbag', 4), 'ico-l'),
+        h('div', { class: 'grow' }, h('div', { class: 'card-name' }, `+${formatNum(claimed.gold)} gold`))),
+      claimed.relic ? (() => {
+        const r = RELICS[claimed.relic.id], rar = RARITIES[claimed.relic.rarity];
+        return h('div', { class: 'card reward-card relicr', style: `--rc:${rar.color}` }, icon(atlas.icon(r.icon, 4), 'ico-l'),
+          h('div', { class: 'grow' }, h('div', { class: 'card-name', style: `color:${rar.color}` }, r.name,
+            h('span', { class: 'tag new' }, claimed.relic.isNew ? 'NEW RELIC' : claimed.relic.dupeGold ? 'MAXED' : `★${claimed.relic.stars}`)),
+          h('div', { class: 'card-sub' }, claimed.relic.dupeGold ? `Converted to ${claimed.relic.dupeGold} gold` : `${rar.name} · ${r.text}`)));
+      })() : null) : null;
+    const el = h('div', { class: 'screen modal' },
+      h('div', { class: 'panel daily' },
+        h('h2', { class: 'glow' }, 'Daily Reward'),
+        h('div', { class: 'muted center' }, st.canClaim
+          ? (st.streak ? `Streak: ${st.streak} day${st.streak > 1 ? 's' : ''}. Come back every day to reach Day 7!` : 'Log in each day in a row to climb to the Day 7 treasure.')
+          : `Streak: ${st.streak} day${st.streak > 1 ? 's' : ''}. Next reward tomorrow.`),
+        strip, result,
+        st.canClaim
+          ? btn(`Claim Day ${st.day}`, () => { const res = claimDaily(p); this.game.save(); sfx.chest(); this.showDaily(res); }, 'primary', { 'data-autofocus': true })
+          : btn('Continue', () => this.showTitle(), 'primary', { 'data-autofocus': true }),
+        h('div', { class: 'muted small center' }, 'Missing a day restarts the streak at Day 1.')));
+    this.mount('daily', el, () => this.showTitle());
+  }
+
   // ------------------------------------------------------------ leaderboard
   showLeaderboard(mode = 'standard', map = 'all') {
     const p = this.p;
@@ -527,11 +573,16 @@ export class UI {
   // ------------------------------------------------------------ in-run: level up
   choiceCard(c, run, onPick) {
     let name, desc, ic, tag, hint = null;
+    const from = c.from !== undefined ? c.from : c.level - 1;
+    const gained = c.level - from;
     if (c.type === 'weapon') {
       const d = WEAPONS[c.id];
       name = d.name; ic = d.icon;
-      tag = c.level === 1 ? 'NEW' : `LV ${c.level}`;
-      desc = c.level === 1 ? d.desc : d.levels[c.level - 2].text;
+      tag = from === 0 ? (c.level > 1 ? `NEW · LV ${c.level}` : 'NEW') : `LV ${c.level}`;
+      // List every level's bonus this card grants.
+      const texts = [];
+      for (let lv = Math.max(2, from + 1); lv <= c.level; lv++) texts.push(d.levels[lv - 2].text);
+      desc = from === 0 ? [d.desc, ...texts].join(' · ') : texts.join(' · ');
       if (d.evolve) {
         const pas = PASSIVES[d.evolve.passive];
         const has = !!run.passives[d.evolve.passive];
@@ -540,8 +591,8 @@ export class UI {
     } else if (c.type === 'passive') {
       const d = PASSIVES[c.id];
       name = d.name; ic = d.icon;
-      tag = c.level === 1 ? 'NEW' : `LV ${c.level}`;
-      desc = d.text;
+      tag = from === 0 ? (c.level > 1 ? `NEW · LV ${c.level}` : 'NEW') : `LV ${c.level}`;
+      desc = gained > 1 ? `${d.text} (x${gained})` : d.text;
       const w = run.weapons.find((x) => x.def.evolve && x.def.evolve.passive === c.id);
       if (w) hint = h('div', { class: 'hint ready' }, icon(atlas.icon(w.def.icon, 2), 'ico-xs'), `Evolves ${w.def.name}`);
     } else if (c.type === 'gold') {
@@ -549,10 +600,15 @@ export class UI {
     } else {
       name = 'Feast'; ic = 'heart'; tag = ''; desc = `Heal ${c.amount}`;
     }
-    return h('button', { class: 'card choice', 'data-f': true, onclick: () => onPick(c) },
+    const rar = CARD_RARITIES.find((r) => r.id === (c.rarity || 'common'));
+    const rarLabel = c.type === 'weapon' || c.type === 'passive'
+      ? h('div', { class: 'rarity' }, rar.name + (gained > 1 ? ` · +${gained} levels` : ''))
+      : null;
+    return h('button', { class: 'card choice rar-' + rar.id, style: `--rc:${rar.color}`, 'data-f': true, onclick: () => onPick(c) },
       icon(atlas.icon(ic, 4), 'ico-l'),
       h('div', { class: 'grow' },
-        h('div', { class: 'card-name' }, name, tag ? h('span', { class: 'tag' + (tag === 'NEW' ? ' new' : '') }, tag) : null),
+        rarLabel,
+        h('div', { class: 'card-name' }, name, tag ? h('span', { class: 'tag' + (tag.startsWith('NEW') ? ' new' : '') }, tag) : null),
         h('div', { class: 'card-sub' }, desc), hint));
   }
 

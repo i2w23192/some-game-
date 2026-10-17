@@ -24,6 +24,7 @@ export function defaultProfile() {
     nightfall: {}, // mapId -> highest selectable Nightfall level
     bounties: [],
     leaderboard: [], // best runs, see src/meta/leaderboard.js
+    daily: { last: null, streak: 0, total: 0 }, // login streak, see src/meta/daily.js
     bountySeed: 1,
     bountyRerolls: 1,
     last: { char: 'warden', map: 'gravewood', mode: 'standard', nightfall: 0 },

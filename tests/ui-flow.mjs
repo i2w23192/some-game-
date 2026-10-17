@@ -14,6 +14,14 @@ const tap = async (text) => { await page.getByRole('button', { name: text, exact
 
 await page.goto(base);
 await page.waitForTimeout(800);
+// Daily reward greets a new player.
+ok(await page.locator('h2', { hasText: 'Daily Reward' }).isVisible(), 'daily reward pops up on first launch');
+const g0 = await page.evaluate(() => window.__game.profile.gold);
+await tap('Claim Day 1');
+const g1 = await page.evaluate(() => window.__game.profile.gold);
+ok(g1 > g0, `claiming day 1 gives gold (${g0} -> ${g1})`);
+ok(await page.getByRole('button', { name: 'Claim Day 1', exact: true }).count() === 0, 'cannot claim twice in one day');
+await tap('Continue');
 await tap('Play');
 ok(await page.locator('h2', { hasText: 'Choose your Warden' }).isVisible(), 'character select opens');
 await page.screenshot({ path: shots + '/ui-chars.png' });
@@ -38,6 +46,17 @@ await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { p
 await page.evaluate(() => window.__game.run.addXp(30));
 await page.waitForTimeout(400);
 ok(await page.locator('.levelup').isVisible(), 'level-up overlay appears');
+ok(await page.locator('.card.choice .rarity').count() > 0, 'level-up cards show their rarity');
+const rar = await page.evaluate(async () => {
+  const { CARD_RARITIES } = await import('/src/game/run.js');
+  const run = window.__game.run;
+  const legend = CARD_RARITIES.find((r) => r.id === 'legendary');
+  const saved = [...CARD_RARITIES]; CARD_RARITIES.length = 0; CARD_RARITIES.push(legend);
+  const c = run.rollRarity({ type: 'passive', id: 'might', level: 1 });
+  CARD_RARITIES.length = 0; CARD_RARITIES.push(...saved);
+  return c;
+});
+ok(rar.rarity === 'legendary' && rar.level === 5, 'a legendary card jumps an item to max level');
 await page.screenshot({ path: shots + '/ui-levelup.png' });
 const before = await page.evaluate(() => JSON.stringify([window.__game.run.weapons.map((w) => w.id + w.level), window.__game.run.passives]));
 await page.locator('.card.choice').first().tap();
@@ -75,6 +94,7 @@ ok(saved.feats.reach5, 'feat "First Light" unlocked by surviving 5 min');
 // Reload: progress persists
 await page.reload();
 await page.waitForTimeout(800);
+ok(await page.locator('h2', { hasText: 'Daily Reward' }).count() === 0, 'daily reward does not pop up again the same day');
 const p2 = await page.evaluate(() => window.__game.profile);
 ok(p2.stats.runs === 1 && p2.gold === saved.gold, 'progress survives reload');
 
