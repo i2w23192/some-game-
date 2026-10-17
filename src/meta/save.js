@@ -23,6 +23,7 @@ export function defaultProfile() {
     charWins: {}, // charId -> count
     nightfall: {}, // mapId -> highest selectable Nightfall level
     bounties: [],
+    leaderboard: [], // best runs, see src/meta/leaderboard.js
     bountySeed: 1,
     bountyRerolls: 1,
     last: { char: 'warden', map: 'gravewood', mode: 'standard', nightfall: 0 },
@@ -53,6 +54,7 @@ export function normalize(data) {
   p.v = SAVE_VERSION;
   if (!Array.isArray(p.equipped)) p.equipped = [];
   if (!Array.isArray(p.bounties)) p.bounties = [];
+  if (!Array.isArray(p.leaderboard)) p.leaderboard = [];
   if (typeof p.gold !== 'number' || !isFinite(p.gold)) p.gold = 0;
   return p;
 }

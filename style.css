@@ -439,3 +439,13 @@ textarea.code {
   -webkit-user-select: text;
   user-select: text;
 }
+
+/* leaderboard */
+.center-seg { justify-content: center; }
+.seg.wrap { flex-wrap: wrap; }
+.lbrow { padding: 8px 10px; }
+.lbrank { width: 38px; font-size: 18px; color: var(--muted); text-align: center; flex: none; }
+.lbrow.top1 { border-color: var(--gold); }
+.lbrow.top1 .lbrank { color: var(--gold); }
+.lbrow.top2 .lbrank { color: #d8d8e8; }
+.lbrow.top3 .lbrank { color: #e09a5a; }
