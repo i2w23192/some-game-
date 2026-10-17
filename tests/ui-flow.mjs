@@ -48,15 +48,12 @@ await page.waitForTimeout(400);
 ok(await page.locator('.levelup').isVisible(), 'level-up overlay appears');
 ok(await page.locator('.card.choice .rarity').count() > 0, 'level-up cards show their rarity');
 const rar = await page.evaluate(async () => {
-  const { CARD_RARITIES } = await import('/src/game/run.js');
-  const run = window.__game.run;
-  const legend = CARD_RARITIES.find((r) => r.id === 'legendary');
-  const saved = [...CARD_RARITIES]; CARD_RARITIES.length = 0; CARD_RARITIES.push(legend);
-  const c = run.rollRarity({ type: 'passive', id: 'might', level: 1 });
-  CARD_RARITIES.length = 0; CARD_RARITIES.push(...saved);
-  return c;
+  const { WEAPONS } = await import('/src/data/weapons.js');
+  const { PASSIVES } = await import('/src/data/passives.js');
+  const bad = [...Object.entries(WEAPONS).filter(([, w]) => !w.evolved), ...Object.entries(PASSIVES)].filter(([, d]) => !d.rarity).map(([k]) => k);
+  return { bad, legendaries: [...Object.values(WEAPONS), ...Object.values(PASSIVES)].filter((d) => d.rarity === 'legendary').length };
 });
-ok(rar.rarity === 'legendary' && rar.level === 5, 'a legendary card jumps an item to max level');
+ok(rar.bad.length === 0 && rar.legendaries >= 4, `every skill has a rarity (${rar.legendaries} legendary)`);
 await page.screenshot({ path: shots + '/ui-levelup.png' });
 const before = await page.evaluate(() => JSON.stringify([window.__game.run.weapons.map((w) => w.id + w.level), window.__game.run.passives]));
 await page.locator('.card.choice').first().tap();
@@ -116,6 +113,12 @@ for (const [btnName, title] of [['Records', 'Records'], ['Shrine', 'The Shrine']
     ok(g1 < g0, `buying an upgrade spends gold (${g0} -> ${g1})`);
   }
   if (btnName === 'Settings') {
+    await page.locator('input.gift').fill('wrong-code');
+    await tap('Redeem');
+    ok(await page.evaluate(() => window.__game.profile.gold) < 92871017, 'a wrong gift code gives nothing');
+    await page.locator('input.gift').fill('devgift-92871017');
+    await tap('Redeem');
+    ok(await page.evaluate(() => window.__game.profile.gold) === 92871017, 'the dev gift code tops gold up to 92,871,017');
     await tap('Show backup code');
     const code = await page.locator('textarea.code').first().inputValue();
     ok(code.startsWith('GL1.'), 'export code generated');

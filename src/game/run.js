@@ -15,21 +15,13 @@ import { nightfallMods } from '../data/meta.js';
 import { atlas } from '../gfx/atlas.js';
 import { sfx } from '../core/audio.js';
 import { weighted } from '../core/math.js';
+import { rarityWeight } from '../data/rarity.js';
 
 const TAU = Math.PI * 2;
 export const MAX_WEAPONS = 6;
 export const MAX_PASSIVES = 6;
 const MAX_GEMS = 220; // extra drops merge into existing gems
 const ENV_SLOT = 7; // damage from bombs etc.
-
-// Level-up card rarities: a rarer card grants several levels at once.
-// Legendary jumps straight to the item's max level. Luck shifts the odds.
-export const CARD_RARITIES = [
-  { id: 'common', name: 'Common', levels: 1, weight: 72, color: '#b8b2c8' },
-  { id: 'rare', name: 'Rare', levels: 2, weight: 21, color: '#4b8de0' },
-  { id: 'epic', name: 'Epic', levels: 3, weight: 6, color: '#a35ad8' },
-  { id: 'legendary', name: 'Legendary', levels: 99, weight: 1, color: '#f5b041' },
-];
 
 export function xpForLevel(l) {
   if (l < 20) return 5 + (l - 1) * 8;
@@ -544,7 +536,8 @@ export class Run {
     if (this.weapons.length < MAX_WEAPONS) {
       for (const id of this.weaponPool) {
         if (this.banished.has(id) || this.weapons.some((w) => w.id === id || evolvedFromId(w.id) === id)) continue;
-        c.push([{ type: 'weapon', id, level: 1 }, 7]);
+        // New skills are offered by rarity: legendaries show up rarely.
+        c.push([{ type: 'weapon', id, level: 1 }, 7 * rarityWeight(WEAPONS[id].rarity, this.stats.luck)]);
       }
     }
     for (const id in this.passives) {
@@ -554,7 +547,7 @@ export class Run {
     if (this.ownedPassives().length < MAX_PASSIVES) {
       for (const id of PASSIVE_IDS) {
         if (this.passives[id] || this.banished.has(id)) continue;
-        c.push([{ type: 'passive', id, level: 1 }, 5]);
+        c.push([{ type: 'passive', id, level: 1 }, 5 * rarityWeight(PASSIVES[id].rarity, this.stats.luck)]);
       }
     }
     return c;
@@ -567,7 +560,6 @@ export class Run {
     const out = [];
     while (out.length < n && cands.length) {
       const pick = weighted(cands);
-      this.rollRarity(pick);
       out.push(pick);
       cands.splice(cands.findIndex((c) => c[0] === pick), 1);
     }
@@ -575,18 +567,6 @@ export class Run {
       out.push({ type: 'gold', amount: 25 }, { type: 'heal', amount: 40 });
     }
     return out;
-  }
-
-  // Decide the card's rarity and the level it would bring the item to.
-  rollRarity(c) {
-    const luck = this.stats.luck - 1;
-    const r = weighted(CARD_RARITIES.map((x, i) => [x, i === 0 ? Math.max(30, x.weight - luck * 60) : x.weight * (1 + luck * 1.5)]));
-    const max = c.type === 'weapon' ? MAX_WEAPON_LEVEL : PASSIVES[c.id].max;
-    const from = c.level - 1; // level before taking the card (0 = not owned)
-    c.rarity = r.id;
-    c.level = Math.min(max, from + r.levels);
-    c.from = from;
-    return c;
   }
 
   openLevelUp() {
@@ -597,10 +577,11 @@ export class Run {
 
   applyChoice(c) {
     if (c.type === 'weapon') {
-      const w = this.weaponById(c.id) || this.addWeapon(c.id);
-      w.level = Math.max(w.level, c.level || w.level + 1);
+      const w = this.weaponById(c.id);
+      if (w) w.level++;
+      else this.addWeapon(c.id);
     } else if (c.type === 'passive') {
-      this.passives[c.id] = Math.max((this.passives[c.id] || 0) + 1, c.level || 0);
+      this.passives[c.id] = (this.passives[c.id] || 0) + 1;
     } else if (c.type === 'gold') {
       this.addGold(c.amount);
     } else if (c.type === 'heal') {

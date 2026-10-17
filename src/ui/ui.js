@@ -16,7 +16,8 @@ import {
   relicSlots, rewardText, buyUpgrade, refundAll, toggleEquip, ensureBounties,
   claimBounty, rerollBounty,
 } from '../meta/progression.js';
-import { CARD_RARITIES } from '../game/run.js';
+import { RARITY } from '../data/rarity.js';
+import { redeemCode } from '../meta/gift.js';
 import { dailyStatus, claimDaily, DAILY_REWARDS, rewardScale } from '../meta/daily.js';
 import { leaderboardView } from '../meta/leaderboard.js';
 import { exportCode, importCode, wipeProfile, defaultProfile } from '../meta/save.js';
@@ -516,6 +517,7 @@ export class UI {
       h('div', { class: 'seg' }, values.map((v, i) => btn(names[i], () => { st[key] = v; apply(); }, st[key] === v ? 'on' : ''))));
     const exportBox = h('textarea', { class: 'code', readonly: true, rows: 3 });
     const importBox = h('textarea', { class: 'code', rows: 3, placeholder: 'Paste a save code here' });
+    const giftBox = h('input', { class: 'code gift', type: 'text', placeholder: 'Enter code', autocomplete: 'off', autocapitalize: 'characters', spellcheck: 'false' });
     const el = h('div', { class: 'screen' },
       h('h2', null, 'Settings'),
       h('div', { class: 'opt' }, h('span', null, 'Sound'),
@@ -530,6 +532,14 @@ export class UI {
       toggle('Auto performance', 'autoPerf'),
       toggle('Show FPS', 'showFps'),
       choice('Joystick', 'fixedStick', [false, true], ['Floating', 'Fixed']),
+      h('h3', null, 'Gift code'),
+      h('div', { class: 'row2' },
+        giftBox,
+        btn('Redeem', () => {
+          const msg = redeemCode(p, giftBox.value);
+          if (!msg) { this.toast('That code is not valid.'); return; }
+          this.game.save(); sfx.chest(); this.toast(msg, 'gold'); giftBox.value = '';
+        }, 'primary')),
       h('h3', null, 'Save data'),
       h('div', { class: 'muted small' }, 'Progress saves automatically on this device. Copy a backup code to keep it safe or move it to another device.'),
       h('div', { class: 'row2' },
@@ -572,17 +582,12 @@ export class UI {
 
   // ------------------------------------------------------------ in-run: level up
   choiceCard(c, run, onPick) {
-    let name, desc, ic, tag, hint = null;
-    const from = c.from !== undefined ? c.from : c.level - 1;
-    const gained = c.level - from;
+    let name, desc, ic, tag, hint = null, rarity = null;
     if (c.type === 'weapon') {
       const d = WEAPONS[c.id];
-      name = d.name; ic = d.icon;
-      tag = from === 0 ? (c.level > 1 ? `NEW · LV ${c.level}` : 'NEW') : `LV ${c.level}`;
-      // List every level's bonus this card grants.
-      const texts = [];
-      for (let lv = Math.max(2, from + 1); lv <= c.level; lv++) texts.push(d.levels[lv - 2].text);
-      desc = from === 0 ? [d.desc, ...texts].join(' · ') : texts.join(' · ');
+      name = d.name; ic = d.icon; rarity = d.rarity;
+      tag = c.level === 1 ? 'NEW' : `LV ${c.level}`;
+      desc = c.level === 1 ? d.desc : d.levels[c.level - 2].text;
       if (d.evolve) {
         const pas = PASSIVES[d.evolve.passive];
         const has = !!run.passives[d.evolve.passive];
@@ -590,9 +595,9 @@ export class UI {
       }
     } else if (c.type === 'passive') {
       const d = PASSIVES[c.id];
-      name = d.name; ic = d.icon;
-      tag = from === 0 ? (c.level > 1 ? `NEW · LV ${c.level}` : 'NEW') : `LV ${c.level}`;
-      desc = gained > 1 ? `${d.text} (x${gained})` : d.text;
+      name = d.name; ic = d.icon; rarity = d.rarity;
+      tag = c.level === 1 ? 'NEW' : `LV ${c.level}`;
+      desc = d.text;
       const w = run.weapons.find((x) => x.def.evolve && x.def.evolve.passive === c.id);
       if (w) hint = h('div', { class: 'hint ready' }, icon(atlas.icon(w.def.icon, 2), 'ico-xs'), `Evolves ${w.def.name}`);
     } else if (c.type === 'gold') {
@@ -600,15 +605,13 @@ export class UI {
     } else {
       name = 'Feast'; ic = 'heart'; tag = ''; desc = `Heal ${c.amount}`;
     }
-    const rar = CARD_RARITIES.find((r) => r.id === (c.rarity || 'common'));
-    const rarLabel = c.type === 'weapon' || c.type === 'passive'
-      ? h('div', { class: 'rarity' }, rar.name + (gained > 1 ? ` · +${gained} levels` : ''))
-      : null;
-    return h('button', { class: 'card choice rar-' + rar.id, style: `--rc:${rar.color}`, 'data-f': true, onclick: () => onPick(c) },
+    const rid = rarity || 'common';
+    const rar = RARITY[rid];
+    return h('button', { class: 'card choice rar-' + rid, style: `--rc:${rar.color}`, 'data-f': true, onclick: () => onPick(c) },
       icon(atlas.icon(ic, 4), 'ico-l'),
       h('div', { class: 'grow' },
-        rarLabel,
-        h('div', { class: 'card-name' }, name, tag ? h('span', { class: 'tag' + (tag.startsWith('NEW') ? ' new' : '') }, tag) : null),
+        rarity ? h('div', { class: 'rarity' }, rar.name) : null,
+        h('div', { class: 'card-name' }, name, tag ? h('span', { class: 'tag' + (tag === 'NEW' ? ' new' : '') }, tag) : null),
         h('div', { class: 'card-sub' }, desc), hint));
   }
 

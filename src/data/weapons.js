@@ -12,7 +12,7 @@
 
 export const WEAPONS = {
   bolt: {
-    name: 'Arcane Bolt', icon: 'bolt', kind: 'bolt',
+    name: 'Arcane Bolt', icon: 'bolt', kind: 'bolt', rarity: 'common',
     desc: 'Fires a bolt at the nearest enemy.',
     base: { damage: 12, cooldown: 0.8, amount: 1, area: 1, speed: 210, pierce: 1, duration: 1.6 },
     levels: [
@@ -27,7 +27,7 @@ export const WEAPONS = {
     evolve: { passive: 'haste', into: 'torrent' },
   },
   knife: {
-    name: 'Throwing Daggers', icon: 'dagger', kind: 'knife',
+    name: 'Throwing Daggers', icon: 'dagger', kind: 'knife', rarity: 'common',
     desc: 'Rapidly throws daggers where you face.',
     base: { damage: 8, cooldown: 0.6, amount: 1, area: 1, speed: 300, pierce: 1, duration: 1 },
     levels: [
@@ -42,7 +42,7 @@ export const WEAPONS = {
     evolve: { passive: 'swiftness', into: 'edges' },
   },
   axe: {
-    name: 'Hurled Axe', icon: 'axe', kind: 'axe',
+    name: 'Hurled Axe', icon: 'axe', kind: 'axe', rarity: 'epic',
     desc: 'Throws heavy axes in an arc. Pierces everything.',
     base: { damage: 25, cooldown: 1.8, amount: 1, area: 1, speed: 1, pierce: 999, duration: 3 },
     levels: [
@@ -57,7 +57,7 @@ export const WEAPONS = {
     evolve: { passive: 'might', into: 'spiral' },
   },
   orbit: {
-    name: 'Spirit Blades', icon: 'blade', kind: 'orbit',
+    name: 'Spirit Blades', icon: 'blade', kind: 'orbit', rarity: 'rare',
     desc: 'Blades circle around you for a while.',
     base: { damage: 10, cooldown: 3.5, amount: 2, area: 1, speed: 1, pierce: 999, duration: 3 },
     levels: [
@@ -72,7 +72,7 @@ export const WEAPONS = {
     evolve: { passive: 'hourglass', into: 'halo' },
   },
   aura: {
-    name: 'Blight Aura', icon: 'ringicon', kind: 'aura',
+    name: 'Blight Aura', icon: 'ringicon', kind: 'aura', rarity: 'common',
     desc: 'Damages enemies near you. Pushes them back.',
     base: { damage: 6, cooldown: 0.55, amount: 0, area: 1, speed: 1, pierce: 999, duration: 0 },
     levels: [
@@ -87,7 +87,7 @@ export const WEAPONS = {
     evolve: { passive: 'vitality', into: 'plague' },
   },
   lightning: {
-    name: 'Storm Call', icon: 'zap', kind: 'lightning',
+    name: 'Storm Call', icon: 'zap', kind: 'lightning', rarity: 'epic',
     desc: 'Lightning strikes random enemies.',
     base: { damage: 20, cooldown: 2.0, amount: 2, area: 1, speed: 1, pierce: 999, duration: 0 },
     levels: [
@@ -102,7 +102,7 @@ export const WEAPONS = {
     evolve: { passive: 'echo', into: 'thunder' },
   },
   firebomb: {
-    name: 'Firebomb', icon: 'flask', kind: 'firebomb',
+    name: 'Firebomb', icon: 'flask', kind: 'firebomb', rarity: 'rare',
     desc: 'Lobs flasks that leave burning ground.',
     base: { damage: 7, cooldown: 2.6, amount: 1, area: 1, speed: 1, pierce: 999, duration: 2.5 },
     levels: [
@@ -117,7 +117,7 @@ export const WEAPONS = {
     evolve: { passive: 'reach', into: 'inferno' },
   },
   scythe: {
-    name: "Reaper's Arc", icon: 'scythe', kind: 'scythe',
+    name: "Reaper's Arc", icon: 'scythe', kind: 'scythe', rarity: 'epic',
     desc: 'Sweeps a wide arc in front of you.',
     base: { damage: 22, cooldown: 1.3, amount: 1, area: 1, speed: 1, pierce: 999, duration: 0 },
     levels: [
@@ -130,6 +130,36 @@ export const WEAPONS = {
       { damage: 12, cooldown: -0.15, text: '+12 damage, faster' },
     ],
     evolve: { passive: 'regen', into: 'harvest' },
+  },
+
+  // ---- legendary weapons: rare to find, absurdly strong, no evolution needed
+  starfall: {
+    name: 'Starfall', icon: 'fireorb', kind: 'meteor', rarity: 'legendary',
+    desc: 'Meteors crash down on your foes, flattening whole crowds.',
+    base: { damage: 90, cooldown: 1.5, amount: 3, area: 1, speed: 1, pierce: 999, duration: 0 },
+    levels: [
+      { amount: 1, text: '+1 meteor' },
+      { damage: 40, text: '+40 damage' },
+      { cooldown: -0.25, text: 'Falls faster' },
+      { amount: 1, area: 0.2, text: '+1 meteor, bigger craters' },
+      { damage: 60, text: '+60 damage' },
+      { area: 0.3, cooldown: -0.2, text: 'Huge, faster impacts' },
+      { amount: 2, damage: 80, text: '+2 meteors, +80 damage' },
+    ],
+  },
+  maw: {
+    name: 'Abyssal Maw', icon: 'r_orb_k', kind: 'aura', rarity: 'legendary',
+    desc: 'A vast void around you that drags enemies in and shreds them.',
+    base: { damage: 30, cooldown: 0.35, amount: 0, area: 2.4, speed: 1, pierce: 999, duration: 0, pull: 1, slow: 0.3 },
+    levels: [
+      { area: 0.3, text: 'Wider void' },
+      { damage: 15, text: '+15 damage' },
+      { cooldown: -0.05, text: 'Faster shredding' },
+      { damage: 20, area: 0.2, text: '+20 damage, wider' },
+      { pull: 0.5, text: 'Stronger pull' },
+      { damage: 25, text: '+25 damage' },
+      { area: 0.4, damage: 30, text: 'Colossal void, +30 damage' },
+    ],
   },
 
   // ---- evolutions (max level, cannot be levelled further) ----
@@ -175,7 +205,7 @@ export const WEAPONS = {
   },
 };
 
-export const BASE_WEAPONS = ['bolt', 'knife', 'axe', 'orbit', 'aura', 'lightning', 'firebomb', 'scythe'];
+export const BASE_WEAPONS = ['bolt', 'knife', 'axe', 'orbit', 'aura', 'lightning', 'firebomb', 'scythe', 'starfall', 'maw'];
 export const MAX_WEAPON_LEVEL = 8;
 
 export function weaponStats(id, level) {

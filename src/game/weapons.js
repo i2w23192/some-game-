@@ -29,6 +29,7 @@ export function computeWeapon(w, s) {
     drain: b.drain || 0,
     chain: b.chain || 0,
     full: b.full || 0,
+    pull: b.pull || 0,
   };
 }
 
@@ -73,6 +74,7 @@ export class Combat {
       case 'axe': this.fireAxe(w, fs); break;
       case 'spiral': this.fireSpiral(w, fs); break;
       case 'lightning': fired = this.fireLightning(w, fs); break;
+      case 'meteor': fired = this.fireMeteor(w, fs); break;
       case 'firebomb': this.fireBomb(w, fs); break;
       case 'scythe': this.fireScythe(w, fs); break;
     }
@@ -186,6 +188,29 @@ export class Combat {
     return hits > 0;
   }
 
+  // Starfall: meteors slam into enemies on screen (bosses first).
+  fireMeteor(w, fs) {
+    const run = this.run, list = run.enemies.list, pl = run.player;
+    const hw = run.view.w / 2, hh = run.view.h / 2;
+    let hits = 0;
+    for (let i = 0; i < fs.amount; i++) {
+      let t = i === 0 ? run.priorityTarget(Math.min(hw, hh)) : null;
+      for (let tries = 0; tries < 8 && !t; tries++) {
+        const e = list.length ? list[(Math.random() * list.length) | 0] : null;
+        if (e && !e.dead && !e.isStatic && Math.abs(e.x - pl.x) < hw && Math.abs(e.y - pl.y) < hh) t = e;
+      }
+      if (!t) continue;
+      hits++;
+      const R = 30 * fs.area;
+      run.fx.add({ kind: 'zap', x: t.x + 40, y: t.y - 120, x2: t.x, y2: t.y, dur: 0.2, color: '#ec8a2e' });
+      run.fx.add({ kind: 'ring', x: t.x, y: t.y, r: R, dur: 0.3, color: '#f5d351' });
+      run.fx.burst(t.x, t.y, '#ec8a2e', 6, 70);
+      this.blast(t.x, t.y, R, fs.damage, w.slot, 2.5);
+    }
+    if (hits) { sfx.boom(); run.shake = Math.max(run.shake, 1.5); }
+    return hits > 0;
+  }
+
   // Instant area damage (bypasses per-slot hit cooldown).
   blast(x, y, r, dmg, slot, kb) {
     const hits = this.run.enemies.query(x, y, r);
@@ -274,9 +299,17 @@ export class Combat {
     w.angle += dt;
     w.timer -= dt;
     const R = 26 * fs.area;
-    if (fs.slow) {
+    if (fs.slow || fs.pull) {
       const hits = run.enemies.query(pl.x, pl.y, R);
-      for (let i = 0; i < hits.length; i++) { hits[i].slow = fs.slow; hits[i].slowT = 0.2; }
+      for (let i = 0; i < hits.length; i++) {
+        const e = hits[i];
+        if (fs.slow) { e.slow = fs.slow; e.slowT = 0.2; }
+        // Abyssal Maw drags everything toward the centre.
+        if (fs.pull && !e.isBoss && !e.isStatic) {
+          const dx = pl.x - e.x, dy = pl.y - e.y, d = Math.hypot(dx, dy) || 1;
+          e.kx += (dx / d) * 160 * fs.pull * dt; e.ky += (dy / d) * 160 * fs.pull * dt;
+        }
+      }
     }
     if (w.timer > 0) return;
     w.timer = fs.cooldown;

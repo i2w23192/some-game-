@@ -427,7 +427,7 @@ button.card:active { transform: translateY(2px); }
 .dmgrow { display: flex; align-items: center; gap: 8px; font-size: 14px; }
 .dmgrow b { width: 60px; text-align: right; }
 
-textarea.code {
+textarea.code, input.code {
   width: 100%;
   font-family: ui-monospace, monospace;
   font-size: 11px;
@@ -468,3 +468,5 @@ textarea.code {
 .dgold { font-size: 13px; color: var(--gold); }
 .dextra { font-size: 10px; color: var(--purple); }
 .dcheck { position: absolute; top: 2px; right: 4px; color: var(--green); font-size: 14px; }
+
+input.code.gift { font-size: 16px; min-height: 46px; text-transform: uppercase; }
