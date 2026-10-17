@@ -18,6 +18,7 @@ import {
 } from '../meta/progression.js';
 import { RARITY } from '../data/rarity.js';
 import { redeemCode } from '../meta/gift.js';
+import { REBIRTH_MIN_GOLD, EMBER_BONUS, goldSinceRebirth, embersForRebirth, canRebirth, doRebirth, rebirthTitle } from '../meta/rebirth.js';
 import { dailyStatus, claimDaily, DAILY_REWARDS, rewardScale } from '../meta/daily.js';
 import { leaderboardView } from '../meta/leaderboard.js';
 import { exportCode, importCode, wipeProfile, defaultProfile } from '../meta/save.js';
@@ -150,13 +151,15 @@ export class UI {
         h('div', { class: 'logo-art' }, icon(atlas.icon('warden', 6), 'hero'), icon(atlas.icon('brazier', 5), 'flame')),
         h('h1', null, 'GRAVELIGHT'),
         p.admin ? h('div', { class: 'admin-badge' }, 'ADMIN') : null,
+        p.rebirth.count ? h('div', { class: 'reborn-badge' }, `${rebirthTitle(p.rebirth.count)} · ${p.rebirth.embers} embers`) : null,
         h('div', { class: 'sub' }, 'Hold the light. Survive the night.')),
       h('div', { class: 'gold-line' }, icon(atlas.icon('coin', 3), 'ico-s'), formatNum(p.gold)),
       h('div', { class: 'menu' },
         btn('Play', () => this.showCharacters(), 'big primary', { 'data-autofocus': true }),
-        h('div', { class: 'row2' },
+        h('div', { class: 'row3' },
           btn('Shrine', () => this.showShrine()),
-          btn('Relics', () => this.showRelics())),
+          btn('Relics', () => this.showRelics()),
+          btn(['Rebirth', canRebirth(p) ? h('span', { class: 'badge' }, '!') : null], () => this.showRebirth())),
         h('div', { class: 'row2' },
           btn('Feats', () => this.showFeats()),
           btn(['Bounties', claimable ? h('span', { class: 'badge' }, String(claimable)) : null], () => this.showBounties())),
@@ -373,6 +376,41 @@ export class UI {
       slotRow, grid, detail,
       h('div', { class: 'bar' }, btn('Back', () => this.showTitle())));
     this.mount('relics', el, () => this.showTitle());
+  }
+
+  // ------------------------------------------------------------ rebirth
+  showRebirth() {
+    const p = this.p;
+    const r = p.rebirth;
+    const gain = embersForRebirth(p);
+    const earned = goldSinceRebirth(p);
+    const pct = (k, n) => `+${Math.round(EMBER_BONUS[k] * n * 100)}%`;
+    const bonusRows = (n) => h('div', { class: 'statgrid' },
+      h('div', { class: 'stat' }, h('span', null, 'Damage'), h('b', null, pct('might', n))),
+      h('div', { class: 'stat' }, h('span', null, 'Max HP'), h('b', null, pct('maxHp', n))),
+      h('div', { class: 'stat' }, h('span', null, 'Gold'), h('b', null, pct('greed', n))),
+      h('div', { class: 'stat' }, h('span', null, 'Experience'), h('b', null, pct('growth', n))));
+    const el = h('div', { class: 'screen' },
+      h('h2', { class: 'glow' }, 'Rebirth'),
+      h('div', { class: 'muted center' }, 'Burn away your gold and Shrine blessings to be reborn stronger. Each Soul Ember is a permanent bonus for every future run.'),
+      h('div', { class: 'detail' },
+        h('h3', null, r.count ? `${rebirthTitle(r.count)} · ${r.embers} Soul Embers` : 'Not yet reborn'),
+        bonusRows(r.embers)),
+      h('div', { class: 'detail' },
+        h('h3', null, gain ? `Rebirth now for +${gain} Soul Embers` : 'Not ready to rebirth'),
+        h('div', { class: 'muted small' }, gain
+          ? `Gold earned since your last rebirth: ${formatNum(earned)}. More gold earned = more embers.`
+          : `Earn ${formatNum(REBIRTH_MIN_GOLD)} gold since your last rebirth (so far: ${formatNum(earned)}).`),
+        gain ? h('div', null, h('div', { class: 'muted small' }, 'After rebirth your total bonus will be:'), bonusRows(r.embers + gain)) : null,
+        h('div', { class: 'muted small' }, 'Resets: gold and Shrine upgrades. Keeps: relics, characters, maps, feats, records, bounties and Nightfall.')),
+      h('div', { class: 'bar' },
+        btn('Back', () => this.showTitle()),
+        btn(`Rebirth (+${gain})`, () => {
+          this.confirm(`Reset your gold and Shrine upgrades for +${gain} Soul Embers?`, () => {
+            doRebirth(p); this.game.save(); sfx.victory(); this.toast(`Reborn! +${gain} Soul Embers`, 'gold'); this.showRebirth();
+          }, () => this.showRebirth());
+        }, 'danger', { disabled: !gain })));
+    this.mount('rebirth', el, () => this.showTitle());
   }
 
   // ------------------------------------------------------------ daily reward
