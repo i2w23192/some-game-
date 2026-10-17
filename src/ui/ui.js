@@ -16,6 +16,7 @@ import {
   relicSlots, rewardText, buyUpgrade, refundAll, toggleEquip, ensureBounties,
   claimBounty, rerollBounty,
 } from '../meta/progression.js';
+import { leaderboardView } from '../meta/leaderboard.js';
 import { exportCode, importCode, wipeProfile, defaultProfile } from '../meta/save.js';
 
 const FEAT_BY_ID = Object.fromEntries(FEATS.map((f) => [f.id, f]));
@@ -152,7 +153,9 @@ export class UI {
         h('div', { class: 'row2' },
           btn('Feats', () => this.showFeats()),
           btn(['Bounties', claimable ? h('span', { class: 'badge' }, String(claimable)) : null], () => this.showBounties())),
-        btn('Settings', () => this.showSettings())),
+        h('div', { class: 'row2' },
+          btn('Records', () => this.showLeaderboard()),
+          btn('Settings', () => this.showSettings()))),
       h('div', { class: 'foot' },
         `Runs ${p.stats.runs} · Kills ${formatNum(p.stats.kills)} · Best ${formatTime(Math.max(0, ...Object.values(p.best), 0))}`));
     this.mount('title', el, null);
@@ -362,6 +365,39 @@ export class UI {
       slotRow, grid, detail,
       h('div', { class: 'bar' }, btn('Back', () => this.showTitle())));
     this.mount('relics', el, () => this.showTitle());
+  }
+
+  // ------------------------------------------------------------ leaderboard
+  showLeaderboard(mode = 'standard', map = 'all') {
+    const p = this.p;
+    const rows = leaderboardView(p, mode, map);
+    const list = h('div', { class: 'list' });
+    if (!rows.length) list.appendChild(h('div', { class: 'card note' }, 'No runs here yet. Go set a record!'));
+    rows.slice(0, 50).forEach((e, i) => {
+      const d = new Date(e.date);
+      list.appendChild(h('div', { class: 'card lbrow' + (i < 3 ? ' top' + (i + 1) : '') },
+        h('b', { class: 'lbrank' }, '#' + (i + 1)),
+        icon(atlas.icon(e.char, 3), 'ico'),
+        h('div', { class: 'grow' },
+          h('div', { class: 'card-name' }, formatNum(e.score),
+            e.victory ? h('span', { class: 'tag new' }, 'WIN') : null,
+            e.nightfall ? h('span', { class: 'tag' }, 'NF ' + e.nightfall) : null),
+          h('div', { class: 'card-sub' }, `${formatTime(e.time)} · Lv ${e.level} · ${formatNum(e.kills)} kills · ${MAPS[e.map].name}`),
+          h('div', { class: 'card-sub' }, `${CHARACTERS[e.char].name} · ${d.toLocaleDateString()}`))));
+    });
+    const tab = (label, on, fn) => btn(label, fn, on ? 'on' : '');
+    const el = h('div', { class: 'screen' },
+      h('h2', null, 'Records'),
+      h('div', { class: 'muted center small' }, 'Your best runs on this device. Score = kills, time, level, bosses and wins, boosted by map and Nightfall.'),
+      h('div', { class: 'seg center-seg' },
+        tab('Standard', mode === 'standard', () => this.showLeaderboard('standard', map)),
+        endlessUnlocked(p) || p.leaderboard.some((e) => e.mode === 'endless') ? tab('Endless', mode === 'endless', () => this.showLeaderboard('endless', map)) : null),
+      h('div', { class: 'seg center-seg wrap' },
+        tab('All maps', map === 'all', () => this.showLeaderboard(mode, 'all')),
+        MAP_IDS.filter((id) => isMapUnlocked(p, id)).map((id) => tab(MAPS[id].name, map === id, () => this.showLeaderboard(mode, id)))),
+      list,
+      h('div', { class: 'bar' }, btn('Back', () => this.showTitle())));
+    this.mount('records', el, () => this.showTitle());
   }
 
   // ------------------------------------------------------------ feats
@@ -651,7 +687,8 @@ export class UI {
       h('h2', { class: sum.victory ? 'glow win' : 'lose' }, title),
       h('div', { class: 'statgrid big' },
         stat('Time', formatTime(sum.time)), stat('Level', sum.level),
-        stat('Kills', formatNum(sum.kills)), stat('Gold', '+' + formatNum(report.gold))),
+        stat('Kills', formatNum(sum.kills)), stat('Gold', '+' + formatNum(report.gold)),
+        stat('Score', formatNum(report.score)), stat('Rank', report.rank ? '#' + report.rank : '-')),
       rows, extras,
       h('div', { class: 'bar' },
         btn('Menu', () => this.showTitle()),

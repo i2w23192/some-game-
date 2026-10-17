@@ -79,10 +79,15 @@ const p2 = await page.evaluate(() => window.__game.profile);
 ok(p2.stats.runs === 1 && p2.gold === saved.gold, 'progress survives reload');
 
 // Visit every menu
-for (const [btnName, title] of [['Shrine', 'The Shrine'], ['Relics', 'Relics'], ['Feats', 'Feats'], ['Bounties', 'Bounties'], ['Settings', 'Settings']]) {
+for (const [btnName, title] of [['Records', 'Records'], ['Shrine', 'The Shrine'], ['Relics', 'Relics'], ['Feats', 'Feats'], ['Bounties', 'Bounties'], ['Settings', 'Settings']]) {
   await tap(btnName);
   ok(await page.locator('h2', { hasText: title }).isVisible(), title + ' screen opens');
   await page.screenshot({ path: shots + '/ui-' + btnName.toLowerCase() + '.png', fullPage: false });
+  if (btnName === 'Records') {
+    ok(await page.locator('.lbrow').count() === 1, 'the finished run is on the leaderboard');
+    const saved2 = await page.evaluate(() => JSON.parse(localStorage.getItem('gravelight.save.v1')).leaderboard);
+    ok(saved2.length === 1 && saved2[0].score > 0, 'leaderboard entry saved (score ' + (saved2[0] && saved2[0].score) + ')');
+  }
   if (btnName === 'Shrine') {
     const g0 = await page.evaluate(() => window.__game.profile.gold);
     await page.locator('.card.shop.afford').first().tap().catch(() => {});

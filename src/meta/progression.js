@@ -7,6 +7,7 @@ import {
   SHOP, shopCost, RELICS, RARITIES, RELIC_MAX_STARS, BASE_RELIC_SLOTS,
   FEATS, BOUNTY_TEMPLATES, NIGHTFALL_MAX, nightfallMods,
 } from '../data/meta.js';
+import { addToLeaderboard } from './leaderboard.js';
 import { seededRng, weighted } from '../core/math.js';
 
 export const STARTING_WEAPONS = ['bolt', 'knife', 'orbit', 'aura'];
@@ -191,7 +192,7 @@ export function checkFeats(p, r) {
 // Applies a finished (or interrupted) run to the profile. Returns a report
 // for the results screen.
 export function applyRun(p, r) {
-  const report = { gold: r.gold, feats: [], bounties: [], relic: null, records: [] };
+  const report = { gold: r.gold, feats: [], bounties: [], relic: null, records: [], score: 0, rank: 0 };
   p.gold += r.gold;
   const s = p.stats;
   s.goldEarned += r.gold;
@@ -222,6 +223,11 @@ export function applyRun(p, r) {
     }
     report.relic = rollRelic(p, r.nightfall, 1.3);
   }
+
+  const lb = addToLeaderboard(p, r);
+  report.score = lb.entry.score;
+  report.rank = lb.rank;
+  if (lb.rank && lb.rank <= 10) report.records.push(`Leaderboard: #${lb.rank} ${r.mode === 'endless' ? 'Endless' : 'Standard'} run!`);
 
   for (const b of p.bounties) {
     if (!b.done && bountyMet(b, r)) { b.done = true; report.bounties.push(b); }
