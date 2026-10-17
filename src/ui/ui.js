@@ -149,6 +149,7 @@ export class UI {
       h('div', { class: 'logo' },
         h('div', { class: 'logo-art' }, icon(atlas.icon('warden', 6), 'hero'), icon(atlas.icon('brazier', 5), 'flame')),
         h('h1', null, 'GRAVELIGHT'),
+        p.admin ? h('div', { class: 'admin-badge' }, 'ADMIN') : null,
         h('div', { class: 'sub' }, 'Hold the light. Survive the night.')),
       h('div', { class: 'gold-line' }, icon(atlas.icon('coin', 3), 'ico-s'), formatNum(p.gold)),
       h('div', { class: 'menu' },
@@ -535,8 +536,8 @@ export class UI {
       h('h3', null, 'Gift code'),
       h('div', { class: 'row2' },
         giftBox,
-        btn('Redeem', () => {
-          const msg = redeemCode(p, giftBox.value);
+        btn('Redeem', async () => {
+          const msg = await redeemCode(p, giftBox.value);
           if (!msg) { this.toast('That code is not valid.'); return; }
           this.game.save(); sfx.chest(); this.toast(msg, 'gold'); giftBox.value = '';
         }, 'primary')),

@@ -470,3 +470,5 @@ textarea.code, input.code {
 .dcheck { position: absolute; top: 2px; right: 4px; color: var(--green); font-size: 14px; }
 
 input.code.gift { font-size: 16px; min-height: 46px; text-transform: uppercase; }
+
+.admin-badge { display: inline-block; margin-top: 4px; padding: 1px 10px; border: 2px solid var(--red); color: var(--red); font-size: 13px; letter-spacing: 3px; }

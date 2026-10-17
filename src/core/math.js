@@ -54,7 +54,7 @@ export function formatTime(sec) {
 export function formatNum(n) {
   n = Math.floor(n);
   if (n < 10000) return String(n);
-  if (n < 1e6) return (n / 1000).toFixed(n < 1e5 ? 1 : 0) + 'K';
-  if (n < 1e9) return (n / 1e6).toFixed(1) + 'M';
+  if (n < 999500) return (n / 1000).toFixed(n < 1e5 ? 1 : 0) + 'K';
+  if (n < 999950000) return (n / 1e6).toFixed(1) + 'M'; // avoid showing 1000.0M
   return (n / 1e9).toFixed(1) + 'B';
 }
