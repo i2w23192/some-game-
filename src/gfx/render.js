@@ -126,11 +126,13 @@ export class Renderer {
       if (wpn.def.kind !== 'aura') continue;
       const R = 26 * wpn.fs.area;
       const evo = wpn.def.evolved;
+      const abyss = wpn.def.rarity === 'legendary';
       ctx.globalAlpha = 0.13 + Math.sin(run.time * 4) * 0.03;
-      ctx.fillStyle = evo ? '#a35ad8' : '#63c55b';
+      ctx.fillStyle = abyss ? '#1b0b2e' : evo ? '#a35ad8' : '#63c55b';
+      if (abyss) ctx.globalAlpha = 0.45 + Math.sin(run.time * 3) * 0.05;
       ctx.beginPath(); ctx.arc(pl.x - camX, pl.y - camY, R, 0, TAU); ctx.fill();
       ctx.globalAlpha = 0.5;
-      ctx.strokeStyle = evo ? '#ef7fb6' : '#b9ea5f';
+      ctx.strokeStyle = abyss ? '#a35ad8' : evo ? '#ef7fb6' : '#b9ea5f';
       ctx.lineWidth = 1;
       ctx.setLineDash([3, 4]);
       ctx.lineDashOffset = -run.time * 12;

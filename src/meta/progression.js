@@ -10,7 +10,8 @@ import {
 import { addToLeaderboard } from './leaderboard.js';
 import { seededRng, weighted } from '../core/math.js';
 
-export const STARTING_WEAPONS = ['bolt', 'knife', 'orbit', 'aura'];
+// Legendary weapons are always in the pool; their rarity keeps them scarce.
+export const STARTING_WEAPONS = ['bolt', 'knife', 'orbit', 'aura', 'starfall', 'maw'];
 
 // ---------------------------------------------------------------- unlocks
 function featRewards(p) {

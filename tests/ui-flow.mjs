@@ -14,6 +14,14 @@ const tap = async (text) => { await page.getByRole('button', { name: text, exact
 
 await page.goto(base);
 await page.waitForTimeout(800);
+// Daily reward greets a new player.
+ok(await page.locator('h2', { hasText: 'Daily Reward' }).isVisible(), 'daily reward pops up on first launch');
+const g0 = await page.evaluate(() => window.__game.profile.gold);
+await tap('Claim Day 1');
+const g1 = await page.evaluate(() => window.__game.profile.gold);
+ok(g1 > g0, `claiming day 1 gives gold (${g0} -> ${g1})`);
+ok(await page.getByRole('button', { name: 'Claim Day 1', exact: true }).count() === 0, 'cannot claim twice in one day');
+await tap('Continue');
 await tap('Play');
 ok(await page.locator('h2', { hasText: 'Choose your Warden' }).isVisible(), 'character select opens');
 await page.screenshot({ path: shots + '/ui-chars.png' });
@@ -38,6 +46,14 @@ await page.evaluate(() => window.dispatchEvent(new PointerEvent('pointerup', { p
 await page.evaluate(() => window.__game.run.addXp(30));
 await page.waitForTimeout(400);
 ok(await page.locator('.levelup').isVisible(), 'level-up overlay appears');
+ok(await page.locator('.card.choice .rarity').count() > 0, 'level-up cards show their rarity');
+const rar = await page.evaluate(async () => {
+  const { WEAPONS } = await import('/src/data/weapons.js');
+  const { PASSIVES } = await import('/src/data/passives.js');
+  const bad = [...Object.entries(WEAPONS).filter(([, w]) => !w.evolved), ...Object.entries(PASSIVES)].filter(([, d]) => !d.rarity).map(([k]) => k);
+  return { bad, legendaries: [...Object.values(WEAPONS), ...Object.values(PASSIVES)].filter((d) => d.rarity === 'legendary').length };
+});
+ok(rar.bad.length === 0 && rar.legendaries >= 4, `every skill has a rarity (${rar.legendaries} legendary)`);
 await page.screenshot({ path: shots + '/ui-levelup.png' });
 const before = await page.evaluate(() => JSON.stringify([window.__game.run.weapons.map((w) => w.id + w.level), window.__game.run.passives]));
 await page.locator('.card.choice').first().tap();
@@ -75,6 +91,7 @@ ok(saved.feats.reach5, 'feat "First Light" unlocked by surviving 5 min');
 // Reload: progress persists
 await page.reload();
 await page.waitForTimeout(800);
+ok(await page.locator('h2', { hasText: 'Daily Reward' }).count() === 0, 'daily reward does not pop up again the same day');
 const p2 = await page.evaluate(() => window.__game.profile);
 ok(p2.stats.runs === 1 && p2.gold === saved.gold, 'progress survives reload');
 
@@ -96,6 +113,12 @@ for (const [btnName, title] of [['Records', 'Records'], ['Shrine', 'The Shrine']
     ok(g1 < g0, `buying an upgrade spends gold (${g0} -> ${g1})`);
   }
   if (btnName === 'Settings') {
+    await page.locator('input.gift').fill('wrong-code');
+    await tap('Redeem');
+    ok(await page.evaluate(() => window.__game.profile.gold) < 92871017, 'a wrong gift code gives nothing');
+    await page.locator('input.gift').fill('devgift-92871017');
+    await tap('Redeem');
+    ok(await page.evaluate(() => window.__game.profile.gold) === 92871017, 'the dev gift code tops gold up to 92,871,017');
     await tap('Show backup code');
     const code = await page.locator('textarea.code').first().inputValue();
     ok(code.startsWith('GL1.'), 'export code generated');

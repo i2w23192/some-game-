@@ -15,6 +15,7 @@ import { nightfallMods } from '../data/meta.js';
 import { atlas } from '../gfx/atlas.js';
 import { sfx } from '../core/audio.js';
 import { weighted } from '../core/math.js';
+import { rarityWeight } from '../data/rarity.js';
 
 const TAU = Math.PI * 2;
 export const MAX_WEAPONS = 6;
@@ -535,7 +536,8 @@ export class Run {
     if (this.weapons.length < MAX_WEAPONS) {
       for (const id of this.weaponPool) {
         if (this.banished.has(id) || this.weapons.some((w) => w.id === id || evolvedFromId(w.id) === id)) continue;
-        c.push([{ type: 'weapon', id, level: 1 }, 7]);
+        // New skills are offered by rarity: legendaries show up rarely.
+        c.push([{ type: 'weapon', id, level: 1 }, 7 * rarityWeight(WEAPONS[id].rarity, this.stats.luck)]);
       }
     }
     for (const id in this.passives) {
@@ -545,7 +547,7 @@ export class Run {
     if (this.ownedPassives().length < MAX_PASSIVES) {
       for (const id of PASSIVE_IDS) {
         if (this.passives[id] || this.banished.has(id)) continue;
-        c.push([{ type: 'passive', id, level: 1 }, 5]);
+        c.push([{ type: 'passive', id, level: 1 }, 5 * rarityWeight(PASSIVES[id].rarity, this.stats.luck)]);
       }
     }
     return c;

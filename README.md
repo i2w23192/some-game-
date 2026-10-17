@@ -42,6 +42,10 @@ Bluetooth Xbox/PlayStation controllers work in iPhone Safari too.
 | Firebomb | Seer Lens | Inferno |
 | Reaper's Arc | Mending Sigil | Soul Harvest |
 
+Every weapon and passive has a **rarity** (Common, Rare, Epic, Legendary) shown on its level-up card. Rarer skills are offered less often (Luck raises the odds) but are much stronger. The Legendary skills are **Starfall** (meteor strikes), **Abyssal Maw** (a huge void that pulls enemies in and shreds them), **Crown of Ruin** and **Heart of Eternity**.
+
+There's also a **daily reward**: a 7-day login streak with gold every day, a relic on Day 3 and a better relic on Day 7. Missing a day restarts the streak.
+
 **Between runs (the long grind):** each system has one job.
 - **Gold → Shrine:** permanent stat upgrades with rising costs (20 upgrade lines). Refunds are free, so you can experiment.
 - **Feats:** milestone achievements that unlock the 8 characters, 4 extra weapons, 2 more maps, Endless mode, Nightfall and relic slots.

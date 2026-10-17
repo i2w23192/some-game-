@@ -18,7 +18,7 @@ ok(await page.evaluate(() => !!navigator.serviceWorker.controller), 'page contro
 await ctx.setOffline(true);
 await page.reload();
 await page.waitForTimeout(1000);
-ok(await page.locator('h1', { hasText: 'GRAVELIGHT' }).isVisible(), 'title screen loads offline');
+ok(await page.locator('h1', { hasText: 'GRAVELIGHT' }).isVisible() || await page.locator('h2', { hasText: 'Daily Reward' }).isVisible(), 'title screen loads offline');
 await page.evaluate(() => window.__game.startRun({ char: 'warden', map: 'gravewood', mode: 'standard', nightfall: 0 }));
 await page.waitForTimeout(1500);
 ok(await page.evaluate(() => window.__game.run && window.__game.run.time > 0.5), 'a run plays offline');
