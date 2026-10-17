@@ -119,6 +119,15 @@ for (const [btnName, title] of [['Records', 'Records'], ['Shrine', 'The Shrine']
     await page.locator('input.gift').fill('devgift-92871017');
     await tap('Redeem');
     ok(await page.evaluate(() => window.__game.profile.gold) === 92871017, 'the dev gift code tops gold up to 92,871,017');
+    const admin = await page.evaluate(async () => {
+      const { applyAdmin } = await import('/src/meta/gift.js');
+      const { redeemCode } = await import('/src/meta/gift.js');
+      const copy = JSON.parse(JSON.stringify(window.__game.profile));
+      applyAdmin(copy);
+      const wrong = await redeemCode(JSON.parse(JSON.stringify(copy)), 'GL-ADMIN-NOPE-NOPE-NOPE');
+      return { shop: Object.keys(copy.shop).length, feats: Object.keys(copy.feats).length, relics: Object.values(copy.relics).every((s) => s === 5), gold: copy.gold, wrong };
+    });
+    ok(admin.shop >= 20 && admin.feats >= 24 && admin.relics && admin.gold >= 999999999 && admin.wrong === null, 'admin mode maxes everything; a wrong admin code is rejected');
     await tap('Show backup code');
     const code = await page.locator('textarea.code').first().inputValue();
     ok(code.startsWith('GL1.'), 'export code generated');
