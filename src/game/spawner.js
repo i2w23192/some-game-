@@ -103,7 +103,8 @@ export class Director {
     return e;
   }
 
-  spawnBoss(id) {
+  // final: only the boss scheduled at the end of a Standard run wins it.
+  spawnBoss(id, final = false) {
     const def = BOSSES[id], run = this.run;
     const [x, y] = this.spawnPos(10);
     const e = run.enemies.create();
@@ -122,6 +123,7 @@ export class Director {
     e.scale = 2;
     e.f1 = this.frame(def.sprite); e.f2 = null;
     e.isBoss = true;
+    e.isFinal = final;
     e.ai = def.ai;
     e.t = 2;
     e.ranged = null;
@@ -188,7 +190,8 @@ export class Director {
     // Scheduled bosses
     const bosses = this.map.bosses;
     while (this.bossIdx < bosses.length && m >= bosses[this.bossIdx].at) {
-      this.spawnBoss(bosses[this.bossIdx++].id);
+      const b = bosses[this.bossIdx++];
+      this.spawnBoss(b.id, b.at * 60 >= RUN_LENGTH);
     }
     if (run.endless && t >= this.nextEndlessBoss) {
       this.nextEndlessBoss += 300;

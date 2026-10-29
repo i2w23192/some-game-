@@ -2,7 +2,7 @@
 // are kept in the save file (on this device only; there is no server).
 
 import { MAPS } from '../data/maps.js';
-import { nightfallMods } from '../data/meta.js';
+import { nightfallMods, DIFFICULTIES } from '../data/meta.js';
 
 export const LEADERBOARD_SIZE = 100;
 
@@ -11,7 +11,8 @@ export const LEADERBOARD_SIZE = 100;
 export function scoreRun(r) {
   const base = r.kills + Math.floor(r.time) * 5 + r.level * 20 + r.bosses * 400 + r.elites * 60 + (r.victory ? 5000 : 0);
   const mapMult = MAPS[r.map] ? MAPS[r.map].hp : 1;
-  return Math.round(base * mapMult * nightfallMods(r.nightfall || 0).gold);
+  const diff = DIFFICULTIES[r.difficulty] || DIFFICULTIES.normal;
+  return Math.round(base * mapMult * nightfallMods(r.nightfall || 0).gold * diff.gold);
 }
 
 // Adds a run and returns its rank among runs of the same mode (1 = best).
@@ -19,7 +20,7 @@ export function addToLeaderboard(p, r) {
   const entry = {
     score: scoreRun(r), time: Math.floor(r.time), kills: r.kills, level: r.level,
     bosses: r.bosses, char: r.char, map: r.map, mode: r.mode,
-    nightfall: r.nightfall || 0, victory: !!r.victory, date: Date.now(),
+    nightfall: r.nightfall || 0, difficulty: r.difficulty || 'normal', victory: !!r.victory, date: Date.now(),
   };
   const board = p.leaderboard;
   board.push(entry);

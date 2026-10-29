@@ -37,6 +37,7 @@ export function installDevTools(game) {
     map: q.get('map') || 'gravewood',
     mode: q.get('mode') || 'standard',
     nightfall: parseInt(q.get('nf') || '0', 10),
+    difficulty: q.get('diff') || 'normal',
   };
   if (stress) game.profile.settings.maxEnemies = 500;
   setTimeout(() => game.startRun(params), 50);

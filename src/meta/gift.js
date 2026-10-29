@@ -30,6 +30,8 @@ export function applyAdmin(p) {
   for (const c of CHARACTER_IDS) p.charWins[c] = Math.max(1, p.charWins[c] || 0);
   const order = Object.keys(RELICS).sort((a, b) => rank(RELICS[b].rarity) - rank(RELICS[a].rarity));
   p.equipped = order.slice(0, relicSlots(p));
+  p.stats.wins = Math.max(1, p.stats.wins);
+  p.stats.bestDifficultyWin = 4; // every difficulty open
   p.gold = Math.max(p.gold, ADMIN_GOLD);
   p.admin = true;
   return 'ADMIN MODE: everything maxed out.';

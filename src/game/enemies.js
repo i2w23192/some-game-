@@ -32,7 +32,7 @@ export class Enemies {
     e.ai = null;
     e.state = 0; e.t = 0; e.t2 = 0; e.tx = 0; e.ty = 0;
     e.rangedT = 0;
-    e.isElite = false; e.isBoss = false; e.isStatic = false;
+    e.isElite = false; e.isBoss = false; e.isStatic = false; e.isFinal = false;
     e.scale = 1;
     this.list.push(e);
     return e;

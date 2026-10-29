@@ -314,6 +314,18 @@ export const SPRITES = {
   magmaslime: { base: 'slime', map: { n: 'o', l: 'y', N: 'R' } },
   cryptbrute: { base: 'brute', map: { g: 'c', G: 't', m: 'G', M: 'K' } },
   acolyte: { base: 'cultist', map: { R: 'P', r: 'p' } },
+  iceskeleton: { base: 'skeleton', map: { e: 'c', E: 'b', r: 'w' } },
+  icewraith: { base: 'wraith', map: { c: 'w', b: 'c', w: 'c' } },
+  frostbrute: { base: 'brute', map: { g: 'w', G: 'c', m: 'b', M: 'B', r: 'B' } },
+  bloodbat1: { base: 'bat1', map: { P: 'R', r: 'y' } },
+  bloodbat2: { base: 'bat2', map: { P: 'R', r: 'y' } },
+  bogslime: { base: 'slime', map: { n: 'm', l: 'r', N: 'M' } },
+  voidimp: { base: 'imp', map: { r: 'P', o: 'p', y: 'c' } },
+  abysseye: { base: 'eye', map: { w: 'P', b: 'v', R: 'p' } },
+  abyssbrute: { base: 'brute', map: { g: 'P', G: 'k', m: 'p', M: 'P', r: 'v', w: 'v' } },
+  icecrystal: { base: 'crystal', map: { c: 'w', b: 'c' } },
+  bloodbones: { base: 'bones', map: { e: 'r', E: 'R' } },
+  voidcrystal: { base: 'crystal', map: { c: 'p', b: 'P', w: 'v' } },
 
   // ---- bosses (drawn at 2x) ----
   boss_colossus: [

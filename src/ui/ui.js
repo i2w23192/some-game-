@@ -10,9 +10,9 @@ import { WEAPONS, MAX_WEAPON_LEVEL } from '../data/weapons.js';
 import { PASSIVES } from '../data/passives.js';
 import { CHARACTERS, CHARACTER_IDS } from '../data/characters.js';
 import { MAPS, MAP_IDS } from '../data/maps.js';
-import { SHOP, shopCost, RELICS, RARITIES, RELIC_MAX_STARS, FEATS, nightfallMods } from '../data/meta.js';
+import { SHOP, shopCost, RELICS, RARITIES, RELIC_MAX_STARS, FEATS, nightfallMods, DIFFICULTIES, DIFFICULTY_IDS } from '../data/meta.js';
 import {
-  isCharUnlocked, isMapUnlocked, endlessUnlocked, nightfallUnlocked, maxNightfall,
+  isCharUnlocked, isMapUnlocked, endlessUnlocked, nightfallUnlocked, maxNightfall, isDifficultyUnlocked,
   relicSlots, rewardText, buyUpgrade, refundAll, toggleEquip, ensureBounties,
   claimBounty, rerollBounty,
 } from '../meta/progression.js';
@@ -222,6 +222,7 @@ export class UI {
     let map = isMapUnlocked(p, p.last.map) ? p.last.map : 'gravewood';
     let mode = p.last.mode === 'endless' && endlessUnlocked(p) ? 'endless' : 'standard';
     let nf = Math.min(p.last.nightfall || 0, maxNightfall(p, map));
+    let diff = DIFFICULTIES[p.last.difficulty] && isDifficultyUnlocked(p, p.last.difficulty) ? p.last.difficulty : 'normal';
     const list = h('div', { class: 'list' });
     const opts = h('div', { class: 'opts' });
     const render = () => {
@@ -245,6 +246,18 @@ export class UI {
         open ? h('div', { class: 'tags' }, h('span', null, `Enemy HP x${m.hp}`), h('span', { class: 'gold' }, `Gold x${m.gold}`)) : null));
       }
       opts.innerHTML = '';
+      // Difficulty picker
+      const d = DIFFICULTIES[diff];
+      opts.appendChild(h('div', { class: 'opt diff' }, h('span', null, 'Difficulty'),
+        h('div', { class: 'seg wrap' }, DIFFICULTY_IDS.map((id) => {
+          const open = isDifficultyUnlocked(p, id);
+          return btn(open ? DIFFICULTIES[id].name : '🔒', () => {
+            if (!open) { this.toast(DIFFICULTIES[id].unlock === 'win' ? 'Unlock: win any run.' : 'Unlock: win on Nightmare.'); return; }
+            diff = id; sfx.click(); render();
+          }, (id === diff ? 'on ' : '') + 'd-' + id, { style: `--dc:${DIFFICULTIES[id].color}` });
+        }))));
+      opts.appendChild(h('div', { class: 'opt muted small', style: `color:${d.color}` },
+        `${d.desc} Enemy HP x${d.hp}, damage x${d.dmg}, gold x${d.gold}.`));
       if (endlessUnlocked(p)) {
         opts.appendChild(h('div', { class: 'opt' }, h('span', null, 'Mode'),
           h('div', { class: 'seg' },
@@ -268,9 +281,9 @@ export class UI {
     };
     render();
     const start = () => {
-      p.last.map = map; p.last.mode = mode; p.last.nightfall = nf;
+      p.last.map = map; p.last.mode = mode; p.last.nightfall = nf; p.last.difficulty = diff;
       this.game.save();
-      this.game.startRun({ char: p.last.char, map, mode, nightfall: nf });
+      this.game.startRun({ char: p.last.char, map, mode, nightfall: nf, difficulty: diff });
     };
     const el = h('div', { class: 'screen' },
       h('h2', null, 'Choose the Ground'),
@@ -467,6 +480,7 @@ export class UI {
         h('div', { class: 'grow' },
           h('div', { class: 'card-name' }, formatNum(e.score),
             e.victory ? h('span', { class: 'tag new' }, 'WIN') : null,
+            e.difficulty && e.difficulty !== 'normal' ? h('span', { class: 'tag', style: `color:${DIFFICULTIES[e.difficulty].color};border-color:${DIFFICULTIES[e.difficulty].color}` }, DIFFICULTIES[e.difficulty].name) : null,
             e.nightfall ? h('span', { class: 'tag' }, 'NF ' + e.nightfall) : null),
           h('div', { class: 'card-sub' }, `${formatTime(e.time)} · Lv ${e.level} · ${formatNum(e.kills)} kills · ${MAPS[e.map].name}`),
           h('div', { class: 'card-sub' }, `${CHARACTERS[e.char].name} · ${d.toLocaleDateString()}`))));
@@ -744,7 +758,7 @@ export class UI {
     const el = h('div', { class: 'screen modal' },
       h('div', { class: 'panel' },
         h('h2', null, 'Paused'),
-        h('div', { class: 'muted center' }, `${MAPS[run.mapId].name}${run.endless ? ' · Endless' : ''}${run.nightfall ? ' · Nightfall ' + run.nightfall : ''}`),
+        h('div', { class: 'muted center' }, `${MAPS[run.mapId].name} · ${DIFFICULTIES[run.difficulty].name}${run.endless ? ' · Endless' : ''}${run.nightfall ? ' · Nightfall ' + run.nightfall : ''}`),
         this.buildSummary(run),
         h('div', { class: 'statgrid' },
           stat('Damage', `+${Math.round((s.might - 1) * 100)}%`), stat('Cooldown', `${Math.round((s.cooldown - 1) * 100)}%`),
@@ -790,7 +804,7 @@ export class UI {
       rows, extras,
       h('div', { class: 'bar' },
         btn('Menu', () => this.showTitle()),
-        btn('Again', () => this.game.startRun({ char: sum.char, map: sum.map, mode: sum.mode, nightfall: sum.nightfall }), 'primary', { 'data-autofocus': true })));
+        btn('Again', () => this.game.startRun({ char: sum.char, map: sum.map, mode: sum.mode, nightfall: sum.nightfall, difficulty: sum.difficulty }), 'primary', { 'data-autofocus': true })));
     this.mount('results', el, () => this.showTitle());
   }
 }
