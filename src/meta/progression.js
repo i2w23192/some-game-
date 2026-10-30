@@ -5,7 +5,7 @@ import { CHARACTERS, CHARACTER_IDS } from '../data/characters.js';
 import { MAPS } from '../data/maps.js';
 import {
   SHOP, shopCost, RELICS, RARITIES, RELIC_MAX_STARS, BASE_RELIC_SLOTS,
-  FEATS, BOUNTY_TEMPLATES, NIGHTFALL_MAX, nightfallMods,
+  FEATS, BOUNTY_TEMPLATES, NIGHTFALL_MAX, nightfallMods, DIFFICULTIES, DIFFICULTY_IDS,
 } from '../data/meta.js';
 import { addToLeaderboard } from './leaderboard.js';
 import { seededRng, weighted } from '../core/math.js';
@@ -39,6 +39,14 @@ export function isMapUnlocked(p, id) {
 
 export const endlessUnlocked = (p) => featRewards(p).some((r) => r.endless);
 export const nightfallUnlocked = (p) => featRewards(p).some((r) => r.nightfall);
+
+export function isDifficultyUnlocked(p, id) {
+  const u = DIFFICULTIES[id].unlock;
+  if (!u) return true;
+  if (u === 'win') return p.stats.wins > 0 || Object.values(p.wins).some((n) => n > 0);
+  if (u === 'nightmare') return (p.stats.bestDifficultyWin || 0) >= DIFFICULTY_IDS.indexOf('nightmare');
+  return false;
+}
 
 export function relicSlots(p) {
   let n = BASE_RELIC_SLOTS;
@@ -217,12 +225,14 @@ export function applyRun(p, r) {
     p.wins[r.map] = (p.wins[r.map] || 0) + 1;
     p.charWins[r.char] = (p.charWins[r.char] || 0) + 1;
     if (r.nightfall > s.bestNightfallWin) s.bestNightfallWin = r.nightfall;
+    const di = DIFFICULTY_IDS.indexOf(r.difficulty || 'normal');
+    if (di > (s.bestDifficultyWin || 0)) s.bestDifficultyWin = di;
     const cur = p.nightfall[r.map] || 0;
     if (r.nightfall >= cur && cur < NIGHTFALL_MAX) {
       p.nightfall[r.map] = r.nightfall + 1;
       if (r.nightfall > 0 || nightfallUnlocked(p)) report.records.push(`Nightfall ${r.nightfall + 1} unlocked on ${MAPS[r.map].name}`);
     }
-    report.relic = rollRelic(p, r.nightfall, 1.3);
+    report.relic = rollRelic(p, r.nightfall + (DIFFICULTIES[r.difficulty] ? DIFFICULTIES[r.difficulty].legendary * 2 : 0), 1.3);
   }
 
   const lb = addToLeaderboard(p, r);

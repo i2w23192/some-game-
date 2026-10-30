@@ -19,6 +19,15 @@ export const ENEMIES = {
   magmaslime: { sprite: 'magmaslime', hp: 95, speed: 26, dmg: 18, r: 6, xp: 5, kb: 0.7 },
   acolyte: { sprite: 'acolyte', hp: 95, speed: 26, dmg: 16, r: 7, xp: 6, kb: 0.7, ranged: { every: 2.6, speed: 85, dmg: 16, sprite: 'fireorb' } },
   cryptbrute: { sprite: 'cryptbrute', hp: 320, speed: 22, dmg: 28, r: 9, xp: 15, kb: 0.2 },
+  // late maps
+  iceskeleton: { sprite: 'iceskeleton', hp: 90, speed: 36, dmg: 18, r: 6, xp: 5, kb: 0.8 },
+  icewraith: { sprite: 'icewraith', hp: 110, speed: 44, dmg: 20, r: 7, xp: 6, kb: 0.9, ranged: { every: 3, speed: 80, dmg: 16, sprite: 'orb' } },
+  frostbrute: { sprite: 'frostbrute', hp: 420, speed: 23, dmg: 32, r: 9, xp: 18, kb: 0.2 },
+  bloodbat: { sprite: ['bloodbat1', 'bloodbat2'], hp: 40, speed: 50, dmg: 14, r: 5, xp: 3, kb: 1 },
+  bogslime: { sprite: 'bogslime', hp: 160, speed: 24, dmg: 24, r: 6, xp: 7, kb: 0.6 },
+  voidimp: { sprite: 'voidimp', hp: 90, speed: 46, dmg: 16, r: 6, xp: 6, kb: 0.9 },
+  abysseye: { sprite: 'abysseye', hp: 180, speed: 36, dmg: 22, r: 6, xp: 9, kb: 0.8, ranged: { every: 2.6, speed: 85, dmg: 18, sprite: 'orb' } },
+  abyssbrute: { sprite: 'abyssbrute', hp: 700, speed: 24, dmg: 36, r: 9, xp: 25, kb: 0.15 },
 };
 
 // Bosses: drawn at 2x. `ai` selects the behaviour in src/game/bosses.js.

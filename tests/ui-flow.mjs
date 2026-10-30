@@ -54,6 +54,20 @@ const rar = await page.evaluate(async () => {
   return { bad, legendaries: [...Object.values(WEAPONS), ...Object.values(PASSIVES)].filter((d) => d.rarity === 'legendary').length };
 });
 ok(rar.bad.length === 0 && rar.legendaries >= 4, `every skill has a rarity (${rar.legendaries} legendary)`);
+const content = await page.evaluate(async () => {
+  const { MAPS } = await import('/src/data/maps.js');
+  const { ENEMIES, BOSSES } = await import('/src/data/enemies.js');
+  const { DIFFICULTIES, FEATS } = await import('/src/data/meta.js');
+  const bad = [];
+  for (const [id, m] of Object.entries(MAPS)) {
+    for (const w of m.waves) for (const [e] of w.pool) if (!ENEMIES[e]) bad.push(id + ':' + e);
+    for (const ev of m.events) if (!ENEMIES[ev.enemy]) bad.push(id + ':' + ev.enemy);
+    for (const b of m.bosses) if (!BOSSES[b.id]) bad.push(id + ':' + b.id);
+    if (id !== 'gravewood' && !FEATS.some((f) => f.reward.map === id)) bad.push(id + ':no unlock');
+  }
+  return { maps: Object.keys(MAPS).length, diffs: Object.keys(DIFFICULTIES).length, bad };
+});
+ok(content.maps >= 6 && content.diffs >= 5 && content.bad.length === 0, `${content.maps} maps and ${content.diffs} difficulties, all enemies/bosses/unlocks valid ${content.bad.join(',')}`);
 await page.screenshot({ path: shots + '/ui-levelup.png' });
 const before = await page.evaluate(() => JSON.stringify([window.__game.run.weapons.map((w) => w.id + w.level), window.__game.run.passives]));
 await page.locator('.card.choice').first().tap();
@@ -139,6 +153,8 @@ for (const [btnName, title] of [['Rebirth', 'Rebirth'], ['Records', 'Records'], 
       const { redeemCode } = await import('/src/meta/gift.js');
       const copy = JSON.parse(JSON.stringify(window.__game.profile));
       applyAdmin(copy);
+      const { isDifficultyUnlocked } = await import('/src/meta/progression.js');
+      if (!isDifficultyUnlocked(copy, 'hell')) return { shop: 0 };
       const wrong = await redeemCode(JSON.parse(JSON.stringify(copy)), 'GL-ADMIN-NOPE-NOPE-NOPE');
       return { shop: Object.keys(copy.shop).length, feats: Object.keys(copy.feats).length, relics: Object.values(copy.relics).every((s) => s === 5), gold: copy.gold, wrong };
     });

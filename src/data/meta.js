@@ -61,6 +61,17 @@ export const RELICS = {
 
 export const BASE_RELIC_SLOTS = 1;
 
+// ---- Difficulty modes (picked per run, stack with Nightfall) ----
+// unlock: null = always; 'win' = any win; 'nightmare' = a win on Nightmare.
+export const DIFFICULTIES = {
+  easy: { name: 'Easy', color: '#63c55b', hp: 0.6, dmg: 0.6, speed: 0.92, density: 0.8, gold: 0.6, legendary: 0, unlock: null, desc: 'Weaker enemies, less gold. Learn the ropes.' },
+  normal: { name: 'Normal', color: '#f2ecdc', hp: 1, dmg: 1, speed: 1, density: 1, gold: 1, legendary: 0, unlock: null, desc: 'The intended challenge.' },
+  hard: { name: 'Hard', color: '#ec8a2e', hp: 1.6, dmg: 1.3, speed: 1.06, density: 1.15, gold: 1.6, legendary: 1, unlock: null, desc: 'Tougher, faster hordes. +60% gold.' },
+  nightmare: { name: 'Nightmare', color: '#d23b3b', hp: 2.4, dmg: 1.45, speed: 1.1, density: 1.3, gold: 2.6, legendary: 2, unlock: 'win', desc: 'For finished builds. +160% gold, better relics.' },
+  hell: { name: 'Hell', color: '#a35ad8', hp: 4, dmg: 1.85, speed: 1.15, density: 1.45, gold: 4.5, legendary: 4, unlock: 'nightmare', desc: 'Absolute carnage. +350% gold, best relic odds.' },
+};
+export const DIFFICULTY_IDS = Object.keys(DIFFICULTIES);
+
 // ---- Nightfall (ascension difficulty) ----
 export const NIGHTFALL_MAX = 15;
 export function nightfallMods(n) {
@@ -87,7 +98,13 @@ export const FEATS = [
   { id: 'reach15', name: 'Deeper Dark', desc: 'Survive 15 minutes.', check: (p, r) => r && r.time >= 900, reward: { map: 'crypt' } },
   { id: 'win1', name: 'Dawnbreaker', desc: 'Defeat the Ashen Lord in Gravewood.', check: (p) => !!p.wins.gravewood, reward: { char: 'gravekeeper', weapon: 'scythe', endless: true, nightfall: true, relicSlot: 1 } },
   { id: 'win_crypt', name: 'Crypt Breaker', desc: 'Win in the Sunken Crypt.', check: (p) => !!p.wins.crypt, reward: { map: 'ashen' } },
-  { id: 'win_ashen', name: 'Ember Walker', desc: 'Win in the Ashen Wastes.', check: (p) => !!p.wins.ashen, reward: { relicSlot: 1, gold: 5000 } },
+  { id: 'win_ashen', name: 'Ember Walker', desc: 'Win in the Ashen Wastes.', check: (p) => !!p.wins.ashen, reward: { relicSlot: 1, gold: 5000, map: 'frozen' } },
+  { id: 'win_frozen', name: 'Thaw', desc: 'Win in the Frozen Cathedral.', check: (p) => !!p.wins.frozen, reward: { map: 'blood', gold: 10000 } },
+  { id: 'win_blood', name: 'Bloodbound', desc: 'Win in the Blood Marsh.', check: (p) => !!p.wins.blood, reward: { map: 'abyss', gold: 20000 } },
+  { id: 'win_abyss', name: 'Abyss Walker', desc: 'Win in The Abyss.', check: (p) => !!p.wins.abyss, reward: { gold: 75000 } },
+  { id: 'win_hard', name: 'Hardened', desc: 'Win on Hard difficulty.', check: (p) => (p.stats.bestDifficultyWin || 0) >= 2, reward: { gold: 3000 } },
+  { id: 'win_nightmare', name: 'Nightmare Slayer', desc: 'Win on Nightmare difficulty. Unlocks Hell.', check: (p) => (p.stats.bestDifficultyWin || 0) >= 3, reward: { gold: 15000 } },
+  { id: 'win_hell', name: 'Hellwalker', desc: 'Win on Hell difficulty.', check: (p) => (p.stats.bestDifficultyWin || 0) >= 4, reward: { gold: 50000 } },
   { id: 'nf5', name: 'Nightwalker', desc: 'Win at Nightfall 5 or higher.', check: (p) => p.stats.bestNightfallWin >= 5, reward: { relicSlot: 1 } },
   { id: 'nf10', name: 'Eternal Night', desc: 'Win at Nightfall 10 or higher.', check: (p) => p.stats.bestNightfallWin >= 10, reward: { gold: 20000 } },
   { id: 'nf15', name: 'Abyss Gazer', desc: 'Win at Nightfall 15.', check: (p) => p.stats.bestNightfallWin >= 15, reward: { gold: 60000 } },

@@ -11,7 +11,7 @@ import { WEAPONS, MAX_WEAPON_LEVEL } from '../data/weapons.js';
 import { PASSIVES, PASSIVE_IDS } from '../data/passives.js';
 import { CHARACTERS } from '../data/characters.js';
 import { MAPS } from '../data/maps.js';
-import { nightfallMods } from '../data/meta.js';
+import { nightfallMods, DIFFICULTIES } from '../data/meta.js';
 import { atlas } from '../gfx/atlas.js';
 import { sfx } from '../core/audio.js';
 import { weighted } from '../core/math.js';
@@ -39,7 +39,11 @@ export class Run {
     this.map = MAPS[opts.map];
     this.endless = opts.mode === 'endless';
     this.nightfall = opts.nightfall || 0;
-    this.nf = nightfallMods(this.nightfall);
+    this.difficulty = DIFFICULTIES[opts.difficulty] ? opts.difficulty : 'normal';
+    // Difficulty multiplies into the Nightfall modifiers, so every system
+    // that already respects Nightfall respects difficulty too.
+    const nf = nightfallMods(this.nightfall), df = DIFFICULTIES[this.difficulty];
+    this.nf = { hp: nf.hp * df.hp, dmg: nf.dmg * df.dmg, speed: nf.speed * df.speed, density: nf.density * df.density, gold: nf.gold * df.gold, legendary: nf.legendary + df.legendary };
     this.cap = opts.cap || 350;
     this.weaponPool = opts.weaponPool;
     this.view = { w: 240, h: 400 };
@@ -371,7 +375,7 @@ export class Run {
       this.bosses = this.bosses.filter((b) => b !== e);
       this.shake = 6;
       sfx.boom();
-      if (e.def.final && !this.endless) {
+      if (e.isFinal && !this.endless) {
         this.finish(true);
         return;
       }
@@ -688,7 +692,7 @@ export class Run {
   summary() {
     return {
       char: this.charId, map: this.mapId, mode: this.endless ? 'endless' : 'standard',
-      nightfall: this.nightfall, victory: this.victory,
+      nightfall: this.nightfall, difficulty: this.difficulty, victory: this.victory,
       time: this.time, level: this.level, kills: this.kills,
       gold: Math.floor(this.gold), elites: this.elitesKilled, bosses: this.bossKills,
       chests: this.chests, evolutions: this.evolutions,
